@@ -17,6 +17,7 @@
 #include "http/http_server.h"
 #include "ota/ota_manager.h"
 #include "coredump/coredump.h"
+#include "ddns/ddns.h"
 #include <time.h>
 
 // Serial port mapping
@@ -141,6 +142,7 @@ void setup() {
   Call::init();
   PushRetry::init();
   PushQueue::init();
+  Ddns::init();
   Sim::startReaderTask();
 
   digitalWrite(LED_BUILTIN, LOW);
@@ -210,6 +212,7 @@ void loop() {
   PushRetry::tick();
   TimeSync::tick();
   WifiManager::tick();
+  Ddns::tick();
 
   // RTC 最后已知时间更新（每 10 秒，仅时间已同步时）
   {

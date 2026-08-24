@@ -16,7 +16,8 @@ enum PushType {
   PUSH_TYPE_GOTIFY       = 9,
   PUSH_TYPE_TELEGRAM     = 10,
   PUSH_TYPE_WECHAT_WORK  = 11,
-  PUSH_TYPE_SMS          = 12
+  PUSH_TYPE_SMS          = 12,
+  PUSH_TYPE_EMAIL        = 13
 };
 
 // 推送策略

@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <mbedtls/md.h>
 #include <base64.h>
+#include <ESP_Mail_Client.h>
 
 // ---------- helpers ----------
 
@@ -316,4 +317,50 @@ bool PushChannels::sendSmsPush(const PushChannel& ch, const String& sender, cons
   bool ok = Sms::sendPDU(ch.url.c_str(), content.c_str());
   if (!ok) LOG("PUSHCH", "SMS备份推送失败");
   return ok;
+}
+
+bool PushChannels::sendEmail(const PushChannel& ch, const String& sender, const PushBody& message, const String& timestamp) {
+  String host = ch.url;
+  int port = 465;
+  int colonIdx = host.indexOf(':');
+  if (colonIdx > 0) {
+    port = host.substring(colonIdx + 1).toInt();
+    host = host.substring(0, colonIdx);
+  }
+
+  Session_Config smtp_config;
+  smtp_config.server.host_name = host.c_str();
+  smtp_config.server.port = port;
+  smtp_config.login.email = ch.key1.c_str();
+  smtp_config.login.password = ch.key2.c_str();
+
+  SMTP_Message msg;
+  msg.sender.name = "SMS-Forwarder";
+  msg.sender.email = ch.key1.c_str();
+  msg.subject = "新短信 - " + sender;
+  msg.addRecipient("", ch.customBody.c_str());
+
+  String content = message.type == PUSH_BODY_CUSTOM ? message.content : ("发件人: " + sender + "\n时间: " + timestamp + "\n\n" + message.content);
+  msg.text.content = content.c_str();
+  msg.text.charSet = "utf-8";
+
+  SMTPSession smtp;
+  smtp.callback(nullptr);
+
+  LOG("PUSHCH", "正在通过 %s:%d 发送邮件至 %s", host.c_str(), port, ch.customBody.c_str());
+
+  // 设置超时，增加健壮性 (ESP_Mail_Client config default is 10s socket)
+  // tcpTimeout is the proper property in newer versions, or we can leave default.
+  smtp_config.server.port = port;
+
+  if (!smtp.connect(&smtp_config)) {
+    LOG("PUSHCH", "邮件连接失败: %s", smtp.errorReason().c_str());
+    return false;
+  }
+  if (!MailClient.sendMail(&smtp, &msg)) {
+    LOG("PUSHCH", "邮件发送失败: %s", smtp.errorReason().c_str());
+    return false;
+  }
+  LOG("PUSHCH", "邮件发送成功");
+  return true;
 }

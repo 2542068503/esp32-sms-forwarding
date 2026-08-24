@@ -268,6 +268,8 @@ bool ConfigStore::isPushChannelValid(const PushChannel& ch) {
       return ch.url.length() > 0 && ch.key1.length() > 0;
     case PUSH_TYPE_TELEGRAM:
       return ch.key1.length() > 0 && ch.key2.length() > 0;
+    case PUSH_TYPE_EMAIL:
+      return ch.url.length() > 0 && ch.key1.length() > 0 && ch.key2.length() > 0 && ch.customBody.length() > 0;
     default:
       return false;
   }

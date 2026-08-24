@@ -36,4 +36,5 @@ public:
   static bool sendTelegram  (const PushChannel& ch, const String& sender, const PushBody& message, const String& timestamp);
   static bool sendWechatWork(const PushChannel& ch, const String& sender, const PushBody& message, const String& timestamp);
   static bool sendSmsPush   (const PushChannel& ch, const String& sender, const PushBody& message, const String& timestamp);
+  static bool sendEmail     (const PushChannel& ch, const String& sender, const PushBody& message, const String& timestamp);
 };

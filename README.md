@@ -1,6 +1,6 @@
 # 低成本短信转发器（ESP32-C3 + ML307R/C/A）
 
-> 本项目来源于 https://github.com/chenxuuu/sms_forwarding ，在此基础上改用 C++17 + PlatformIO 进行重构，并增加了更多推送方式和功能。
+> 本项目最初来源于 [chenxuuu/sms_forwarding](https://github.com/chenxuuu/sms_forwarding)，后由 [maxming2333/esp32-sms-forwarding](https://github.com/maxming2333/esp32-sms-forwarding) 使用 C++17 + PlatformIO 进行重构（二次开发）。本仓库作为 **三次修改版**，在二次开发的基础上，增加了全新 Glassmorphism 现代化 UI、原生 IPv6 动态域名解析 (DDNS) 以及原生 SMTP 邮箱推送等增强功能。
 
 基于 ESP32-C3 和 ML307R/C/A 的低成本短信转发器，支持多种推送方式，适合需要远程接收短信通知的场景，如验证码接收、物联网设备监控等。
 
@@ -10,6 +10,8 @@
 
 ## 功能
 
+- **全新 Glassmorphism 现代化 UI**：清爽玻璃拟态设计，带悬浮 Toast 通知
+- **原生 IPv6 + Dynv6 DDNS**：无公网 IPv4 也可通过域名轻松实现外网访问
 - 支持使用通用 AT 指令与模块通信
 - 开机后通过 Web 界面配置短信转发参数、查询当前状态
 - 支持最多 10 个推送通道同时启用，每个通道可独立配置
@@ -32,7 +34,7 @@
 
 ## 推送通道支持
 
-支持以下 12 种推送方式，最多可同时启用 10 个通道，每个通道可独立配置推送策略。
+支持以下 13 种推送方式，最多可同时启用 10 个通道，每个通道可独立配置推送策略。
 
 | # | 推送方式 | 说明 | 所需配置 |
 |---|---------|------|---------|
@@ -48,6 +50,7 @@
 | 10 | Telegram 机器人 | Telegram Bot API | Bot Token + Chat ID |
 | 11 | 企业微信机器人 | 企业微信群通知 | Webhook URL；可选：Secret 加签密钥 |
 | 12 | SMS 备份推送 | 网络不可用时通过 SIM 卡发短信 | 目标手机号 |
+| 13 | Email 邮箱 | 原生 SMTP 协议发信 | SMTP 服务器、账号、授权码、收件人 |
 
 ### 推送策略
 
@@ -121,7 +124,7 @@ ESP32-C3 与 ML307R/C/A 通过串口（UART）连接，接线如下：
 
 ### 方式一：图形化烧录（推荐，零安装）
 
-1. 从 [GitHub Releases](https://github.com/maxming2333/esp32-sms-forwarding/releases/latest) 下载最新版固件压缩包，解压获得 `full.bin`
+1. 从 [GitHub Releases](https://github.com/2542068503/esp32-sms-forwarding/releases/latest) 下载最新版固件压缩包，解压获得 `full.bin`
 2. 使用 Chrome 或 Edge 浏览器（88+）打开 [ESPConnect](https://thelastoutpostworkshop.github.io/ESPConnect/)
 3. 波特率选择 `460800`
 4. 点击「连接」，在浏览器弹窗中选择 "USB JTAG/serial debug unit" 设备
@@ -167,8 +170,8 @@ esptool --chip esp32c3 --baud 460800 write_flash 0x290000 littlefs.bin
 **ESP32-C3（C++17，PlatformIO）**：
 
 - `src/config/` — 配置结构体，NVS（非易失存储）读写，字段校验
-- `src/push/` — 推送通道分发，12 种推送类型实现，消息模板渲染
-- `src/email/` — SMTP 邮件发送（ReadyMail）
+- `src/ddns/` — IPv6 Dynv6 动态域名解析客户端 (DDNS)
+- `src/push/` — 推送通道分发，13 种推送类型实现，消息模板渲染
 - `src/sms/` — UART 读取，PDU 格式解析（pdulib），长短信重组
 - `src/http/` — HTTP 路由（ESPAsyncWebServer），Basic Auth，API 控制器
 - `src/sim/` — SIM 卡 AT 指令，状态机，热插拔，运营商/号码查询
@@ -176,6 +179,7 @@ esptool --chip esp32c3 --baud 460800 write_flash 0x290000 littlefs.bin
 - `src/time/` — 时间同步（SIM NITZ + NTP）
 - `data/index.html` — 配置管理页面（LittleFS）
 - `data/tools.html` — 工具箱页面（LittleFS）
+- `data/style.css` — 全新玻璃拟态 UI 样式表（LittleFS）
 
 **ML307R/C/A**：运行出厂 AT 固件，无需改动。
 
@@ -184,7 +188,7 @@ esptool --chip esp32c3 --baud 460800 write_flash 0x290000 littlefs.bin
 | 库 | 用途 |
 |----|------|
 | `pdulib@^0.5.11` | PDU 格式短信解析 |
-| `ReadyMail@^0.3.8` | SMTP 邮件发送 |
+| `mobizt/ESP Mail Client@^3.4.19` | SMTP 邮件发送（支持 SSL/TLS） |
 | `ESPAsyncWebServer` | 异步 HTTP Web 服务 |
 | `ArduinoJson@^7.4.0` | JSON 序列化/反序列化 |
 
@@ -200,7 +204,7 @@ pip install platformio
 **克隆仓库**：
 
 ```bash
-git clone https://github.com/maxming2333/esp32-sms-forwarding.git
+git clone https://github.com/2542068503/esp32-sms-forwarding.git
 cd esp32-sms-forwarding
 ```
 

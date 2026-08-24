@@ -60,6 +60,7 @@ static bool _sendOneChannel(const PushChannel& ch, const MessageContext& ctx, co
     case PUSH_TYPE_TELEGRAM:    ok = PushChannels::sendTelegram(rendered, sender, body, timestamp);     break;
     case PUSH_TYPE_WECHAT_WORK: ok = PushChannels::sendWechatWork(rendered, sender, body, timestamp);   break;
     case PUSH_TYPE_SMS:         ok = PushChannels::sendSmsPush(rendered, sender, body, timestamp);      break;
+    case PUSH_TYPE_EMAIL:       ok = PushChannels::sendEmail(rendered, sender, body, timestamp);        break;
     default:
       LOG("PUSH", "未知推送类型: %d", (int)rendered.type);
       break;
@@ -81,7 +82,8 @@ static const char* pushTypeLabel(PushType t) {
     case PUSH_TYPE_GOTIFY:      return "Gotify";
     case PUSH_TYPE_TELEGRAM:    return "Telegram Bot";
     case PUSH_TYPE_WECHAT_WORK: return "企业微信机器人";
-    case PUSH_TYPE_SMS:         return "SMS 短信";
+    case PUSH_TYPE_SMS:         return "SMS 备份";
+    case PUSH_TYPE_EMAIL:       return "Email / SMTP";
     default:                    return "未知";
   }
 }
@@ -111,7 +113,7 @@ bool Push::executeChannel(int channelIdx, const String& sender, const String& me
   if (!ConfigStore::isPushChannelValid(ch)) return false;
 
   bool wifiOk = (WiFi.status() == WL_CONNECTED);
-  if (ch.type >= PUSH_TYPE_POST_JSON && ch.type <= PUSH_TYPE_WECHAT_WORK && !wifiOk) return false;
+  if (ch.type != PUSH_TYPE_SMS && !wifiOk) return false;
   if (ch.type == PUSH_TYPE_SMS && msgType.type == MSG_TYPE_SIM) return false;
 
   MessageContext ctx = buildMsgContext(sender, message, timestamp, msgType.toString());
@@ -151,9 +153,9 @@ void Push::executeChain(const String& sender, const String& message, const Strin
     const PushChannel& ch = config.pushChannels[i];
     if (!ConfigStore::isPushChannelValid(ch)) continue;
 
-    // HTTP 类通道（type 1–11）在 WiFi 未连接时跳过
-    if (ch.type >= PUSH_TYPE_POST_JSON && ch.type <= PUSH_TYPE_WECHAT_WORK && !wifiOk) {
-      LOG("PUSH", "WiFi未连接，跳过HTTP通道: %s", ch.name.c_str());
+    // 非 SMS 通道在 WiFi 未连接时跳过
+    if (ch.type != PUSH_TYPE_SMS && !wifiOk) {
+      LOG("PUSH", "WiFi未连接，跳过网络通道: %s", ch.name.c_str());
       continue;
     }
 

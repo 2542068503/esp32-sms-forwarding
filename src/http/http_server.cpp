@@ -118,7 +118,12 @@ void HttpServer::setup(AsyncWebServer& server) {
     request->send(204);
   });
 
-  // Static pages — served from LittleFS as gzip, browser decompresses automatically
+  // Static pages & assets — served from LittleFS as gzip, browser decompresses automatically
+  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+    AsyncWebServerResponse* resp = request->beginResponse(LittleFS, "/style.css.gz", "text/css");
+    resp->addHeader("Content-Encoding", "gzip");
+    request->send(resp);
+  });
   server.on("/tools", HTTP_GET, [](AsyncWebServerRequest* request) {
     AsyncWebServerResponse* resp = request->beginResponse(LittleFS, "/tools.html.gz", "text/html");
     resp->addHeader("Content-Encoding", "gzip");
