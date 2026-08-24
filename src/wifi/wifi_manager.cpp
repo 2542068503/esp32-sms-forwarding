@@ -89,7 +89,7 @@ static int buildSortedWifiOrder(int* outOrder, int count) {
 static void setupSTAMode() {
   WiFi.setHostname(WifiManager::deviceName().c_str());
   WiFi.mode(WIFI_STA);
-  WiFi.enableIPv6();
+  WiFi.enableIpV6();
   WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
 }
 
