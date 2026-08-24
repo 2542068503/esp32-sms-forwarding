@@ -81,9 +81,9 @@ static void doUpdate(const String& ipv6) {
 }
 
 void Ddns::forceUpdate() {
-  String currentIpv6 = WiFi.globalIPv6().toString();
+  String currentIpv6 = WiFi.localIPv6().toString();
   if (currentIpv6.length() == 0 || currentIpv6.equals("::") || currentIpv6.equals("0000:0000:0000:0000:0000:0000:0000:0000")) {
-    currentIpv6 = WiFi.localIPv6().toString();
+    currentIpv6 = "";
   }
   doUpdate(currentIpv6);
   s_lastAttemptMs = millis();
@@ -94,9 +94,9 @@ void Ddns::tick() {
     return;
   }
 
-  String currentIpv6 = WiFi.globalIPv6().toString();
+  String currentIpv6 = WiFi.localIPv6().toString();
   if (currentIpv6.length() == 0 || currentIpv6.equals("::") || currentIpv6.equals("0000:0000:0000:0000:0000:0000:0000:0000")) {
-    currentIpv6 = WiFi.localIPv6().toString();
+    currentIpv6 = "";
   }
 
   unsigned long now = millis();
